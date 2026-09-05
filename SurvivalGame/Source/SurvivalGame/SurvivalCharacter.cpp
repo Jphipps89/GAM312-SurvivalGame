@@ -3,6 +3,7 @@
 
 #include "SurvivalCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ASurvivalCharacter::ASurvivalCharacter()
@@ -16,6 +17,8 @@ ASurvivalCharacter::ASurvivalCharacter()
 
 	// Allow the camera to rotate with the player's view.
 	FirstPersonCamera->bUsePawnControlRotation = true;
+
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
 }
 
@@ -53,6 +56,9 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	// Bind interaction input.
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ASurvivalCharacter::FindObject);
 
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ASurvivalCharacter::StartSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ASurvivalCharacter::StopSprint);
+
 }
 
 void ASurvivalCharacter::MoveForward(float AxisValue)
@@ -88,4 +94,15 @@ void ASurvivalCharacter::StopJump()
 void ASurvivalCharacter::FindObject()
 {
 	// Interaction line trace will be implemented in a later step.
+}
+
+void ASurvivalCharacter::StartSprint()
+{
+	// Increase the character's movement speed while sprinting.
+	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+}
+void ASurvivalCharacter::StopSprint()
+{
+	// Return the character to normal walking speed.
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }

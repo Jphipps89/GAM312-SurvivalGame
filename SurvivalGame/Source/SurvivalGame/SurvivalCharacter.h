@@ -45,4 +45,16 @@ public:
 
 	UFUNCTION()
 	void FindObject();
+
+	UFUNCTION()
+	void StartSprint();
+
+	UFUNCTION()
+	void StopSprint();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float WalkSpeed = 600.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float SprintSpeed = 1000.0f;
 };
