@@ -1,0 +1,17 @@
+# Unreal Engine generated folders
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Visual Studio files
+.vs/
+*.VC.db
+*.VC.opendb
+*.sln
+
+# Build files
+Build/
+
+# Miscellaneous
+*.log
