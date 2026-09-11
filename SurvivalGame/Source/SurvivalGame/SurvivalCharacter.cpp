@@ -4,6 +4,7 @@
 #include "SurvivalCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ASurvivalCharacter::ASurvivalCharacter()
@@ -187,6 +188,19 @@ void ASurvivalCharacter::FindObject()
 
 			// Gathering consumes stamina.
 			SetStamina(-5.0f);
+
+			// Spawn a decal where the resource was hit.
+			if (HitDecal)
+			{
+				UGameplayStatics::SpawnDecalAtLocation(
+					GetWorld(),
+					HitDecal,
+					FVector(10.0f, 10.0f, 10.0f),
+					HitResult.ImpactPoint,
+					HitResult.ImpactNormal.Rotation(),
+					1.0f
+				);
+			}
 
 			// Only collect from a resource that still has something remaining.
 			if (HitResource->TotalResource > 0)

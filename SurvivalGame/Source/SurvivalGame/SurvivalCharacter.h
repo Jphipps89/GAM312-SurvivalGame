@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
 #include "Resource_M.h"
+#include "Materials/MaterialInterface.h"
 #include "SurvivalCharacter.generated.h"
 
 UCLASS()
@@ -121,4 +122,8 @@ public:
 	// Amount of stamina consumed per second while sprinting.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	float SprintStaminaDrainRate = 10.0f;
+
+	// Decal material spawned where the player interacts with a resource.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UMaterialInterface* HitDecal;
 };
