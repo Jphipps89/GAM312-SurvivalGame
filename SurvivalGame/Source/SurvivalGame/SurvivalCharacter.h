@@ -88,4 +88,24 @@ public:
 	void DecreaseStats();
 
 	FTimerHandle StatsTimerHandle;
+
+	// Amount of wood currently held by the player.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+	int32 Wood = 0;
+
+	// Amount of stone currently held by the player.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+	int32 Stone = 0;
+
+	// Amount of berries currently held by the player.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+	int32 Berry = 0;
+
+	// Stores the current amount of each resource by index.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+	TArray<int32> ResourcesArray;
+
+	// Stores the name associated with each resource index.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+	TArray<FString> ResourceNames;
 };

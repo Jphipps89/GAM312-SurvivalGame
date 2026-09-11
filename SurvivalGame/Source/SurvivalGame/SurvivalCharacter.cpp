@@ -20,6 +20,13 @@ ASurvivalCharacter::ASurvivalCharacter()
 
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
+	// Set up the resource arrays so each index matches a resource type.
+	ResourcesArray.SetNum(3);
+	ResourceNames.SetNum(3);
+
+	ResourceNames[0] = "Wood";
+	ResourceNames[1] = "Stone";
+	ResourceNames[2] = "Berry";
 }
 
 // Called when the game starts or when spawned
