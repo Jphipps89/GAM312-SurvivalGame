@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
+#include "Resource_M.h"
 #include "SurvivalCharacter.generated.h"
 
 UCLASS()
@@ -108,4 +109,8 @@ public:
 	// Stores the name associated with each resource index.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
 	TArray<FString> ResourceNames;
+
+	// Adds a collected resource amount to the correct inventory slot.
+	UFUNCTION(BlueprintCallable)
+	void GiveResource(int32 Amount, FString ResourceType);
 };

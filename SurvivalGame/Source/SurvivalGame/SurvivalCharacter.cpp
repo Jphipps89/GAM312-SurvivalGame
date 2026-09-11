@@ -132,7 +132,77 @@ void ASurvivalCharacter::StopJump()
 
 void ASurvivalCharacter::FindObject()
 {
-	// Interaction line trace will be implemented in a later step.
+	// Store information about anything hit by the line trace.
+	FHitResult HitResult;
+
+	// Start the trace at the first person camera.
+	const FVector StartLocation = FirstPersonCamera->GetComponentLocation();
+
+	// Trace forward in the direction the camera is facing.
+	const FVector Direction = FirstPersonCamera->GetForwardVector() * 800.0f;
+	const FVector EndLocation = StartLocation + Direction;
+
+	// Ignore the player character when checking for collisions.
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.bTraceComplex = true;
+	QueryParams.bReturnFaceIndex = true;
+
+	// perform the line trace using the Visibility channel.
+	if (GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		StartLocation,
+		EndLocation,
+		ECC_Visibility,
+		QueryParams))
+	{
+		// Check whether the object hit is one of the resource actors.
+		AResource_M* HitResource = Cast<AResource_M>(HitResult.GetActor());
+
+		if (HitResource)
+		{
+			const FString HitName = HitResource->ResourceName;
+			const int32 ResourceValue = HitResource->ResourceAmount;
+
+			// Only collect from a resource that still has something remaining.
+			if (HitResource->TotalResource > 0)
+			{
+				// Give the resource to the player's inventory.
+				GiveResource(ResourceValue, HitName);
+
+				// Reduce the amount remaining in the resource actor.
+				HitResource->TotalResource -= ResourceValue;
+
+				// Check whether this interaction depleted the resource.
+				if (HitResource->TotalResource <= 0)
+				{
+					if (GEngine)
+					{
+						GEngine->AddOnScreenDebugMessage(
+							-1,
+							2.0f,
+							FColor::Red,
+							TEXT("Resource Depleted")
+						);
+					}
+
+					HitResource->Destroy();
+				}
+				else
+				{
+					if (GEngine)
+					{
+						GEngine->AddOnScreenDebugMessage(
+							-1,
+							2.0f,
+							FColor::Green,
+							TEXT("Resource Collected")
+						);
+					}
+				}
+			}
+		}
+	}
 }
 
 void ASurvivalCharacter::StartSprint()
@@ -192,5 +262,25 @@ void ASurvivalCharacter::DecreaseStats()
 	if (Hunger <= 0.0f)
 	{
 		SetHealth(-1.0f);
+	}
+}
+
+void ASurvivalCharacter::GiveResource(int32 Amount, FString ResourceType)
+{
+	// Add the collected amount to the correct resource inventory slot.
+	if (ResourceType == "Wood")
+	{
+		ResourcesArray[0] += Amount;
+		Wood = ResourcesArray[0];
+	}
+	else if (ResourceType == "Stone")
+	{
+		ResourcesArray[1] += Amount;
+		Stone = ResourcesArray[1];
+	}
+	else if (ResourceType == "Berry")
+	{
+		ResourcesArray[2] += Amount;
+		Berry = ResourcesArray[2];
 	}
 }
