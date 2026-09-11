@@ -19,6 +19,7 @@ public:
 	ASurvivalCharacter();
 
 protected:
+protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -26,7 +27,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* FirstPersonCamera;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -113,4 +114,11 @@ public:
 	// Adds a collected resource amount to the correct inventory slot.
 	UFUNCTION(BlueprintCallable)
 	void GiveResource(int32 Amount, FString ResourceType);
+
+	// Tracks whether the player is currently sprinting.
+	bool bIsSprinting = false;
+
+	// Amount of stamina consumed per second while sprinting.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float SprintStaminaDrainRate = 10.0f;
 };

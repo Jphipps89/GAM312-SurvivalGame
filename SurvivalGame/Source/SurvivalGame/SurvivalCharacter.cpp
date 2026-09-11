@@ -73,6 +73,21 @@ void ASurvivalCharacter::Tick(float DeltaTime)
 		);
 	}
 
+	// Drain stamina continuously while sprinting.
+	if (bIsSprinting && Stamina > 0.0f)
+	{
+		Stamina = FMath::Clamp(
+			Stamina - (SprintStaminaDrainRate * DeltaTime),
+			0.0f,
+			100.0f
+		);
+
+		// Automatically stop sprinting when stamina is depleted.
+		if (Stamina <= 0.0f)
+		{
+			StopSprint();
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -164,6 +179,15 @@ void ASurvivalCharacter::FindObject()
 			const FString HitName = HitResource->ResourceName;
 			const int32 ResourceValue = HitResource->ResourceAmount;
 
+			// Require enough stamina to gather a resource.
+			if (Stamina <= 5.0f)
+			{
+				return;
+			}
+
+			// Gathering consumes stamina.
+			SetStamina(-5.0f);
+
 			// Only collect from a resource that still has something remaining.
 			if (HitResource->TotalResource > 0)
 			{
@@ -207,12 +231,18 @@ void ASurvivalCharacter::FindObject()
 
 void ASurvivalCharacter::StartSprint()
 {
-	// Increase the character's movement speed while sprinting.
-	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	// Only allow sprinting while the player has stamina.
+	if (Stamina > 0.0f)
+	{
+		bIsSprinting = true;
+		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	}
 }
 
 void ASurvivalCharacter::StopSprint()
 {
+	bIsSprinting = false;
+
 	// Return the character to normal walking speed.
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
