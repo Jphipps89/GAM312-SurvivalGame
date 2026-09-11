@@ -27,12 +27,44 @@ void ASurvivalCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// Update survival stats every two seconds.
+	GetWorldTimerManager().SetTimer(
+		StatsTimerHandle,
+		this,
+		&ASurvivalCharacter::DecreaseStats,
+		2.0f,
+		true
+	);
 }
 
 // Called every frame
 void ASurvivalCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			1,
+			0.0f,
+			FColor::Green,
+			FString::Printf(TEXT("Health: %.0f"), Health)
+		);
+
+		GEngine->AddOnScreenDebugMessage(
+			2,
+			0.0f,
+			FColor::Yellow,
+			FString::Printf(TEXT("Hunger: %.0f"), Hunger)
+		);
+
+		GEngine->AddOnScreenDebugMessage(
+			3,
+			0.0f,
+			FColor::Cyan,
+			FString::Printf(TEXT("Stamina: %.0f"), Stamina)
+		);
+	}
 
 }
 
@@ -101,8 +133,57 @@ void ASurvivalCharacter::StartSprint()
 	// Increase the character's movement speed while sprinting.
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 }
+
 void ASurvivalCharacter::StopSprint()
 {
 	// Return the character to normal walking speed.
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+}
+
+void ASurvivalCharacter::SetHealth(float Amount)
+{
+	// Adjust health while preventing it from exceeding the maximum value.
+	if (Health + Amount < 100.0f)
+	{
+		Health += Amount;
+	}
+}
+
+void ASurvivalCharacter::SetHunger(float Amount)
+{
+	// Adjust health while preventing it from exceeding the maximum value.
+	if (Hunger + Amount < 100.0f)
+	{
+		Hunger += Amount;
+	}
+}
+
+void ASurvivalCharacter::SetStamina(float Amount)
+{
+	// Adjust stamina while preventing it from exceeding the maximum value.
+	if (Stamina + Amount < 100.0f)
+	{
+		Stamina += Amount;
+	}
+}
+
+void ASurvivalCharacter::DecreaseStats()
+{
+	// Hunger decreases over time while the player still has hunger remaining.
+	if (Hunger > 0.0f)
+	{
+		SetHunger(-1.0f);
+	}
+
+	// Regenerate stamina over time.
+	if (Stamina < 100.0f)
+	{
+		SetStamina(1.0f);
+	}
+
+	// When hunger reaches zero, begin reducing health.
+	if (Hunger <= 0.0f)
+	{
+		SetHealth(-1.0f);
+	}
 }

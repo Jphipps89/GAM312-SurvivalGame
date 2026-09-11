@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
+#include "TimerManager.h"
 #include "SurvivalCharacter.generated.h"
 
 UCLASS()
@@ -57,4 +58,34 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float SprintSpeed = 1000.0f;
+
+	// Player's current health.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float Health = 100.0f;
+
+	// Player's current hunger level.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float Hunger = 100.0f;
+
+	// Player's current stamina.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float Stamina = 100.0f;
+
+	// Adjusts the player's health.
+	UFUNCTION(BlueprintCallable)
+	void SetHealth(float Amount);
+
+	// Adjusts the player's hunger.
+	UFUNCTION(BlueprintCallable)
+	void SetHunger(float Amount);
+
+	// Adjusts the player's stamina.
+	UFUNCTION(BlueprintCallable)
+	void SetStamina(float Amount);
+
+	// Handles hunger decrease, stamina regeneration, and starvation damage.
+	UFUNCTION(BlueprintCallable)
+	void DecreaseStats();
+
+	FTimerHandle StatsTimerHandle;
 };
