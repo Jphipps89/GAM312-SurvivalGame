@@ -72,6 +72,27 @@ void ASurvivalCharacter::Tick(float DeltaTime)
 			FColor::Cyan,
 			FString::Printf(TEXT("Stamina: %.0f"), Stamina)
 		);
+
+		GEngine->AddOnScreenDebugMessage(
+			4,
+			0.0f,
+			FColor::White,
+			FString::Printf(TEXT("Wood: %d"), Wood)
+		);
+
+		GEngine->AddOnScreenDebugMessage(
+			5,
+			0.0f,
+			FColor::White,
+			FString::Printf(TEXT("Stone: %d"), Stone)
+		);
+
+		GEngine->AddOnScreenDebugMessage(
+			6,
+			0.0f,
+			FColor::White,
+			FString::Printf(TEXT("Berry: %d"), Berry)
+		);
 	}
 
 	// Drain stamina continuously while sprinting.
