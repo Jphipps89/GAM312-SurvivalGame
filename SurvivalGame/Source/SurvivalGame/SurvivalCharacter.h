@@ -8,6 +8,7 @@
 #include "TimerManager.h"
 #include "Resource_M.h"
 #include "Materials/MaterialInterface.h"
+#include "BuildingPart.h"
 #include "SurvivalCharacter.generated.h"
 
 UCLASS()
@@ -19,7 +20,6 @@ public:
 	// Sets default values for this character's properties
 	ASurvivalCharacter();
 
-protected:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -126,4 +126,34 @@ public:
 	// Decal material spawned where the player interacts with a resource.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
 	UMaterialInterface* HitDecal;
+
+	// Stores the number of crafted building pieces.
+	// Index 0 = Wall, 1 = Floor, 2 = Ceiling.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+	TArray<int32> BuildingArray;
+
+	// Tracks whether the player is currently positioning a building piece.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+	bool bIsBuilding = false;
+
+	// Stores the Blueprint class selected for the next building piece.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+	TSubclassOf<ABuildingPart> BuildPartClass;
+
+	// Reference to the building piece currently being positioned.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Building")
+	ABuildingPart* SpawnedPart = nullptr;
+
+	// Removes crafting resources and adds the crafted item to the building inventory.
+	UFUNCTION(BlueprintCallable)
+	void UpdateResources(int32 WoodAmount, int32 StoneAmount, FString BuildingObject);
+
+	// Spawns the selected building piece for placement.
+	UFUNCTION(BlueprintCallable)
+	void SpawnBuilding(int32 BuildingID, bool& IsSuccess);
+
+	// Rotates the building piece while it is being positioned.
+	UFUNCTION(BlueprintCallable)
+	void RotateBuilding();
+
 };

@@ -28,6 +28,10 @@ ASurvivalCharacter::ASurvivalCharacter()
 	ResourceNames[0] = "Wood";
 	ResourceNames[1] = "Stone";
 	ResourceNames[2] = "Berry";
+
+	// Create three building inventory slots:
+    // 0 = Wall, 1 = Floor, 2 = Ceiling.
+	BuildingArray.SetNum(3);
 }
 
 // Called when the game starts or when spawned
@@ -110,6 +114,14 @@ void ASurvivalCharacter::Tick(float DeltaTime)
 			StopSprint();
 		}
 	}
+
+	// Keep the active building piece positioned in front of the player.
+	if (bIsBuilding && SpawnedPart)
+	{
+		const FVector BuildLocation =
+			FirstPersonCamera->GetComponentLocation() +
+			(FirstPersonCamera->GetForwardVector() * 400.0f);
+	}
 }
 
 // Called to bind functionality to input
@@ -135,6 +147,8 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ASurvivalCharacter::StartSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ASurvivalCharacter::StopSprint);
 
+	// Rotate the active building piece.
+	PlayerInputComponent->BindAction("RotPart", IE_Pressed, this, &ASurvivalCharacter::RotateBuilding);
 }
 
 void ASurvivalCharacter::MoveForward(float AxisValue)
@@ -169,6 +183,16 @@ void ASurvivalCharacter::StopJump()
 
 void ASurvivalCharacter::FindObject()
 {
+
+	// If the player is currently positioning a building piece,
+	// place it instead of performing the normal resource interaction.
+	if (bIsBuilding && SpawnedPart)
+	{
+		bIsBuilding = false;
+		SpawnedPart = nullptr;
+		return;
+	}
+
 	// Store information about anything hit by the line trace.
 	FHitResult HitResult;
 
@@ -347,5 +371,103 @@ void ASurvivalCharacter::GiveResource(int32 Amount, FString ResourceType)
 	{
 		ResourcesArray[2] += Amount;
 		Berry = ResourcesArray[2];
+	}
+}
+
+void ASurvivalCharacter::UpdateResources(int32 WoodAmount, int32 StoneAmount, FString BuildingObject)
+{
+	// Make sure the player has enough Wood and Stone to craft the item.
+	if (ResourcesArray[0] >= WoodAmount && ResourcesArray[1] >= StoneAmount)
+	{
+		// Remove the required resources from the player's inventory.
+		ResourcesArray[0] -= WoodAmount;
+		ResourcesArray[1] -= StoneAmount;
+
+		// Keep the individual inventory variables synchronized.
+		Wood = ResourcesArray[0];
+		Stone = ResourcesArray[1];
+
+		// Add the crafted item to the correct building inventory slot.
+		if (BuildingObject == "Wall")
+		{
+			BuildingArray[0] += 1;
+		}
+		else if (BuildingObject == "Floor")
+		{
+			BuildingArray[1] += 1;
+		}
+		else if (BuildingObject == "Ceiling")
+		{
+			BuildingArray[2] += 1;
+		}
+	}
+}
+
+void ASurvivalCharacter::SpawnBuilding(int32 BuildingID, bool& IsSuccess)
+{
+	// Assume the build attempt fails unless all checks pass.
+	IsSuccess = false;
+
+	// Make sure the player is not already positioning a building piece.
+	if (bIsBuilding)
+	{
+		return;
+	}
+
+	// Make sure the requested building inventory slot is valid.
+	if (!BuildingArray.IsValidIndex(BuildingID))
+	{
+		return;
+	}
+
+	// Make sure the player owns at least one of the selected building pieces.
+	if (BuildingArray[BuildingID] >= 0)
+	{
+		return;
+	}
+
+	// Make sure a building class has been selected.
+	if (!BuildPartClass)
+	{
+		return;
+	}
+
+	// Spawn the selected building piece in front of the player's camera.
+	const FVector SpawnLocation =
+		FirstPersonCamera->GetComponentLocation() +
+		(FirstPersonCamera->GetForwardVector() * 400.0f);
+
+	const FRotator SpawnRotation = FRotator::ZeroRotator;
+
+	FActorSpawnParameters SpawnParameters;
+
+	SpawnedPart = GetWorld()->SpawnActor<ABuildingPart>(
+		BuildPartClass,
+		SpawnLocation,
+		SpawnRotation,
+		SpawnParameters
+	);
+
+	if (SpawnedPart)
+	{
+		// Remove one crafted building piece from inventory.
+		BuildingArray[BuildingID] -= 1;
+
+		// Enter building placement mode.
+		bIsBuilding = true;
+
+		IsSuccess = true;
+	}
+}
+
+void ASurvivalCharacter::RotateBuilding()
+{
+	// Rotate the active building piece by 90 degrees.
+	if (bIsBuilding && SpawnedPart)
+	{
+		FRotator NewRotation = SpawnedPart->GetActorRotation();
+		NewRotation.Yaw += 90.0f;
+
+		SpawnedPart->SetActorRotation(NewRotation);
 	}
 }
