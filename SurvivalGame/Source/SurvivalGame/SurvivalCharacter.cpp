@@ -120,10 +120,29 @@ void ASurvivalCharacter::Tick(float DeltaTime)
 	// Keep the active building piece positioned in front of the player.
 	if (bIsBuilding && SpawnedPart)
 	{
-		const FVector BuildLocation =
-			FirstPersonCamera->GetComponentLocation() +
-			(FirstPersonCamera->GetForwardVector() * 400.0f);
-		SpawnedPart->SetActorLocation(BuildLocation);
+		FHitResult BuildHit;
+
+		const FVector TraceStart = FirstPersonCamera->GetComponentLocation();
+		const FVector TraceEnd =
+			TraceStart + (FirstPersonCamera->GetForwardVector() * 800.0f);
+
+		FCollisionQueryParams TraceParams;
+		TraceParams.AddIgnoredActor(this);
+		TraceParams.AddIgnoredActor(SpawnedPart);
+
+		if (GetWorld()->LineTraceSingleByChannel(
+			BuildHit,
+			TraceStart,
+			TraceEnd,
+			ECC_Visibility,
+			TraceParams))
+		{
+			SpawnedPart->SetActorLocation(BuildHit.ImpactPoint);
+		}
+		else
+		{
+			SpawnedPart->SetActorLocation(TraceEnd);
+		}
 	}
 }
 
