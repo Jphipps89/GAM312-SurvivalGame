@@ -117,7 +117,7 @@ void ASurvivalCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	// Keep the active building piece positioned in front of the player.
+	// Use a line trace to position the active building piece on the surface the player is aiming at.
 	if (bIsBuilding && SpawnedPart)
 	{
 		FHitResult BuildHit;
@@ -213,8 +213,6 @@ void ASurvivalCharacter::FindObject()
 	// place it instead of performing the normal resource interaction.
 	if (bIsBuilding && SpawnedPart)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BUILDING PLACED"));
-
 		bIsBuilding = false;
 		SpawnedPart = nullptr;
 		return;
@@ -344,7 +342,7 @@ void ASurvivalCharacter::SetHealth(float Amount)
 
 void ASurvivalCharacter::SetHunger(float Amount)
 {
-	// Adjust health while preventing it from exceeding the maximum value.
+	// Adjust hunger while preventing it from exceeding the maximum value.
 	if (Hunger + Amount < 100.0f)
 	{
 		Hunger += Amount;
@@ -450,7 +448,6 @@ void ASurvivalCharacter::SpawnBuilding(int32 BuildingID, bool& IsSuccess)
 	// Make sure the player owns at least one of the selected building pieces.
 	if (BuildingArray[BuildingID] <= 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SPAWN FAILED: No building pieces in inventory"));
 		return;
 	}
 
@@ -460,7 +457,7 @@ void ASurvivalCharacter::SpawnBuilding(int32 BuildingID, bool& IsSuccess)
 		return;
 	}
 
-	// Spawn the selected building piece in front of the player's camera.
+	// Spawn the selected building piece at an initial location in front of the camera.
 	const FVector SpawnLocation =
 		FirstPersonCamera->GetComponentLocation() +
 		(FirstPersonCamera->GetForwardVector() * 400.0f);
