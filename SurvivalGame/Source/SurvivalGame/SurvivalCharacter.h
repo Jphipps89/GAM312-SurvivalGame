@@ -9,6 +9,7 @@
 #include "Resource_M.h"
 #include "Materials/MaterialInterface.h"
 #include "BuildingPart.h"
+#include "Blueprint/UserWidget.h"
 #include "SurvivalCharacter.generated.h"
 
 UCLASS()
@@ -155,5 +156,17 @@ public:
 	// Rotates the building piece while it is being positioned.
 	UFUNCTION(BlueprintCallable)
 	void RotateBuilding();
+
+	// Opens or closes the crafting/building menu.
+	UFUNCTION()
+	void ToggleCraftMenu();
+
+	// Widget class used for the crafting/building menu.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+	TSubclassOf<UUserWidget> CraftingWidgetClass;
+
+	// Reference to the currently created crafting/building menu.
+	UPROPERTY()
+	UUserWidget* CraftingWidgetInstance = nullptr;
 
 };

@@ -5,6 +5,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values
 ASurvivalCharacter::ASurvivalCharacter()
@@ -149,6 +151,9 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 	// Rotate the active building piece.
 	PlayerInputComponent->BindAction("RotPart", IE_Pressed, this, &ASurvivalCharacter::RotateBuilding);
+
+	// Open or close the crafting/building menu.
+	PlayerInputComponent->BindAction("CraftMenu", IE_Pressed, this, &ASurvivalCharacter::ToggleCraftMenu);
 }
 
 void ASurvivalCharacter::MoveForward(float AxisValue)
@@ -469,5 +474,55 @@ void ASurvivalCharacter::RotateBuilding()
 		NewRotation.Yaw += 90.0f;
 
 		SpawnedPart->SetActorRotation(NewRotation);
+	}
+}
+
+void ASurvivalCharacter::ToggleCraftMenu()
+{
+	// Get the controller so the menu can manage mouse and input behavior.
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+
+	if (!PlayerController || !CraftingWidgetClass)
+	{
+		return;
+	}
+
+	// Close the crafting menu if it is already open.
+	if (CraftingWidgetInstance && CraftingWidgetInstance->IsInViewport())
+	{
+		CraftingWidgetInstance->RemoveFromParent();
+
+		// Return control to normal gameplay.
+		PlayerController->bShowMouseCursor = false;
+
+		FInputModeGameOnly InputMode;
+		PlayerController->SetInputMode(InputMode);
+
+		UWidgetBlueprintLibrary::SetFocusToGameViewport();
+	}
+	else
+	{
+		// Create the crafting menu the first time it is opened.
+		if (!CraftingWidgetInstance)
+		{
+			CraftingWidgetInstance = CreateWidget<UUserWidget>(
+				PlayerController,
+				CraftingWidgetClass
+			);
+		}
+
+		if (CraftingWidgetInstance)
+		{
+			CraftingWidgetInstance->AddToViewport();
+
+			// Allow the player to interact with the crafting menu.
+			PlayerController->bShowMouseCursor = true;
+
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(CraftingWidgetInstance->TakeWidget());
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+			PlayerController->SetInputMode(InputMode);
+		}
 	}
 }
