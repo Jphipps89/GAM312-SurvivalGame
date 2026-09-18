@@ -123,6 +123,7 @@ void ASurvivalCharacter::Tick(float DeltaTime)
 		const FVector BuildLocation =
 			FirstPersonCamera->GetComponentLocation() +
 			(FirstPersonCamera->GetForwardVector() * 400.0f);
+		SpawnedPart->SetActorLocation(BuildLocation);
 	}
 }
 
@@ -193,6 +194,8 @@ void ASurvivalCharacter::FindObject()
 	// place it instead of performing the normal resource interaction.
 	if (bIsBuilding && SpawnedPart)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("BUILDING PLACED"));
+
 		bIsBuilding = false;
 		SpawnedPart = nullptr;
 		return;
@@ -426,8 +429,9 @@ void ASurvivalCharacter::SpawnBuilding(int32 BuildingID, bool& IsSuccess)
 	}
 
 	// Make sure the player owns at least one of the selected building pieces.
-	if (BuildingArray[BuildingID] >= 0)
+	if (BuildingArray[BuildingID] <= 0)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("SPAWN FAILED: No building pieces in inventory"));
 		return;
 	}
 
@@ -445,6 +449,8 @@ void ASurvivalCharacter::SpawnBuilding(int32 BuildingID, bool& IsSuccess)
 	const FRotator SpawnRotation = FRotator::ZeroRotator;
 
 	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	SpawnedPart = GetWorld()->SpawnActor<ABuildingPart>(
 		BuildPartClass,
