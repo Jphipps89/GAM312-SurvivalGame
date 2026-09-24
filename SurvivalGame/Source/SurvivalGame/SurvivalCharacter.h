@@ -88,7 +88,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetStamina(float Amount);
 
-	// Handles hunger decrease, stamina regeneration, and starvation damage.
+	// Handles hunger decrease and starvation damage.
 	UFUNCTION(BlueprintCallable)
 	void DecreaseStats();
 
