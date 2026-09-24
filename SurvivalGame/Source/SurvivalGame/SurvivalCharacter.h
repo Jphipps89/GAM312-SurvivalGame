@@ -10,6 +10,7 @@
 #include "Materials/MaterialInterface.h"
 #include "BuildingPart.h"
 #include "Blueprint/UserWidget.h"
+#include "PlayerWidget.h"
 #include "SurvivalCharacter.generated.h"
 
 UCLASS()
@@ -124,6 +125,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	float SprintStaminaDrainRate = 10.0f;
 
+	// Amount of stamina restored per second after the regeneration delay.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float StaminaRegenRate = 15.0f;
+
+	// Time the player must wait after sprinting before stamina begins regenerating.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float StaminaRegenDelay = 2.0f;
+
+	float TimeSinceSprint = 0.0f;
+
 	// Decal material spawned where the player interacts with a resource.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
 	UMaterialInterface* HitDecal;
@@ -168,5 +179,13 @@ public:
 	// Reference to the currently created crafting/building menu.
 	UPROPERTY()
 	UUserWidget* CraftingWidgetInstance = nullptr;
+
+	// Widget class used for the player stat HUD.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player UI")
+	TSubclassOf<UPlayerWidget> PlayerWidgetClass;
+
+	// Reference to the player stat HUD instance.
+	UPROPERTY()
+	UPlayerWidget* PlayerUI = nullptr;
 
 };

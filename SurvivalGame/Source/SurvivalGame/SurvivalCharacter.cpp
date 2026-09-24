@@ -40,6 +40,17 @@ ASurvivalCharacter::ASurvivalCharacter()
 void ASurvivalCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Create and display the player stat HUD.
+	if (PlayerWidgetClass)
+	{
+		PlayerUI = CreateWidget<UPlayerWidget>(GetWorld(), PlayerWidgetClass);
+
+		if (PlayerUI)
+		{
+			PlayerUI->AddToViewport();
+		}
+	}
 	
 	// Update survival stats every two seconds.
 	GetWorldTimerManager().SetTimer(
@@ -55,6 +66,12 @@ void ASurvivalCharacter::BeginPlay()
 void ASurvivalCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Update the player stat HUD with the current values.
+	if (PlayerUI)
+	{
+		PlayerUI->UpdateBars(Health, Hunger, Stamina);
+	}
 
 	if (GEngine)
 	{
@@ -102,7 +119,7 @@ void ASurvivalCharacter::Tick(float DeltaTime)
 	}
 
 	// Drain stamina continuously while sprinting.
-	if (bIsSprinting && Stamina > 0.0f)
+	if (bIsSprinting && Stamina > 0.0f && GetVelocity().SizeSquared2D() > 0.0f)
 	{
 		Stamina = FMath::Clamp(
 			Stamina - (SprintStaminaDrainRate * DeltaTime),
@@ -115,6 +132,27 @@ void ASurvivalCharacter::Tick(float DeltaTime)
 		{
 			StopSprint();
 		}
+
+	}
+
+	// Track time since the player last sprinted.
+	if (bIsSprinting && GetVelocity().SizeSquared() > 0.0f)
+	{
+		TimeSinceSprint = 0.0f;
+	}
+	else
+	{
+		TimeSinceSprint += DeltaTime;
+	}
+
+	// Regenerate stamina smoothly after the delay.
+	if (TimeSinceSprint >= StaminaRegenDelay && Stamina < 100.0f)
+	{
+		Stamina = FMath::Clamp(
+			Stamina + (StaminaRegenRate * DeltaTime),
+			0.0f,
+			100.0f
+		);
 	}
 
 	// Use a line trace to position the active building piece on the surface the player is aiming at.
@@ -351,11 +389,18 @@ void ASurvivalCharacter::SetHunger(float Amount)
 
 void ASurvivalCharacter::SetStamina(float Amount)
 {
-	// Adjust stamina while preventing it from exceeding the maximum value.
-	if (Stamina + Amount < 100.0f)
+	// Reset the regeneration delay whenever stamina is spent.
+	if (Amount < 0.0f)
 	{
-		Stamina += Amount;
+		TimeSinceSprint = 0.0f;
 	}
+
+	// Adjust stamina and keep it between 0 and 100.
+	Stamina = FMath::Clamp(
+		Stamina + Amount,
+		0.0f,
+		100.0f
+	);
 }
 
 void ASurvivalCharacter::DecreaseStats()
@@ -364,12 +409,6 @@ void ASurvivalCharacter::DecreaseStats()
 	if (Hunger > 0.0f)
 	{
 		SetHunger(-1.0f);
-	}
-
-	// Regenerate stamina over time.
-	if (Stamina < 100.0f)
-	{
-		SetStamina(1.0f);
 	}
 
 	// When hunger reaches zero, begin reducing health.
