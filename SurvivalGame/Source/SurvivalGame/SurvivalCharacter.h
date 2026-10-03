@@ -11,6 +11,7 @@
 #include "BuildingPart.h"
 #include "Blueprint/UserWidget.h"
 #include "PlayerWidget.h"
+#include "ObjectiveWidget.h"
 #include "SurvivalCharacter.generated.h"
 
 UCLASS()
@@ -187,5 +188,21 @@ public:
 	// Reference to the player stat HUD instance.
 	UPROPERTY()
 	UPlayerWidget* PlayerUI = nullptr;
+
+	// Widget class used for the objective HUD.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Objectives")
+	TSubclassOf<UObjectiveWidget> ObjectiveWidgetClass;
+
+	// Reference to the objective HUD instance.
+	UPROPERTY()
+	UObjectiveWidget* ObjectiveWidget = nullptr;
+
+	// Tracks total materials collected toward the onjective.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Objectives")
+	float MatsCollected = 0.0f;
+
+	// Tracks total building parts placed toward the objective.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Objectives")
+	float ObjectsBuilt = 0.0f;
 
 };

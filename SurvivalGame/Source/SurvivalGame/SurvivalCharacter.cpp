@@ -51,6 +51,20 @@ void ASurvivalCharacter::BeginPlay()
 			PlayerUI->AddToViewport();
 		}
 	}
+
+	if (ObjectiveWidgetClass)
+	{
+		ObjectiveWidget = CreateWidget<UObjectiveWidget>(GetWorld(), ObjectiveWidgetClass);
+
+		if (ObjectiveWidget)
+		{
+			ObjectiveWidget->AddToViewport();
+
+			// Initialize the objective display at zero.
+			ObjectiveWidget->UpdateMatObjective(MatsCollected);
+			ObjectiveWidget->UpdateBuildObjective(ObjectsBuilt);
+		}
+	}
 	
 	// Update survival stats every two seconds.
 	GetWorldTimerManager().SetTimer(
@@ -251,7 +265,17 @@ void ASurvivalCharacter::FindObject()
 	// place it instead of performing the normal resource interaction.
 	if (bIsBuilding && SpawnedPart)
 	{
+		// Confirm the current building piece has been placed.
 		bIsBuilding = false;
+
+		// Track placed building parts for the objective.
+		ObjectsBuilt += 1.0f;
+
+		if (ObjectiveWidget)
+		{
+			ObjectiveWidget->UpdateBuildObjective(ObjectsBuilt);
+		}
+
 		SpawnedPart = nullptr;
 		return;
 	}
@@ -315,6 +339,14 @@ void ASurvivalCharacter::FindObject()
 			{
 				// Give the resource to the player's inventory.
 				GiveResource(ResourceValue, HitName);
+
+				// Track collected materials for the objective.
+				MatsCollected += ResourceValue;
+
+				if (ObjectiveWidget)
+				{
+					ObjectiveWidget->UpdateMatObjective(MatsCollected);
+				}
 
 				// Reduce the amount remaining in the resource actor.
 				HitResource->TotalResource -= ResourceValue;
