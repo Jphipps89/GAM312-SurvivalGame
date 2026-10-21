@@ -59,6 +59,12 @@ public:
 	UFUNCTION()
 	void StopSprint();
 
+	UFUNCTION()
+	void EatBerry();
+
+	UFUNCTION()
+	void ExitGame();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float WalkSpeed = 600.0f;
 

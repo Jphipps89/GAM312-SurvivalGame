@@ -14,11 +14,11 @@ ASurvivalCharacter::ASurvivalCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Create the first person camera and attach it to the character.
+	// Unreal's camera component provides the player's view into the 3D world.
+	// Attaching it to the character and using controller rotation creates
+	// a first person camera that follows the player's movement and mouse look.
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->SetupAttachment(GetMesh(), TEXT("head"));
-
-	// Allow the camera to rotate with the player's view.
 	FirstPersonCamera->bUsePawnControlRotation = true;
 
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
@@ -85,51 +85,6 @@ void ASurvivalCharacter::Tick(float DeltaTime)
 	if (PlayerUI)
 	{
 		PlayerUI->UpdateBars(Health, Hunger, Stamina);
-	}
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			1,
-			0.0f,
-			FColor::Green,
-			FString::Printf(TEXT("Health: %.0f"), Health)
-		);
-
-		GEngine->AddOnScreenDebugMessage(
-			2,
-			0.0f,
-			FColor::Yellow,
-			FString::Printf(TEXT("Hunger: %.0f"), Hunger)
-		);
-
-		GEngine->AddOnScreenDebugMessage(
-			3,
-			0.0f,
-			FColor::Cyan,
-			FString::Printf(TEXT("Stamina: %.0f"), Stamina)
-		);
-
-		GEngine->AddOnScreenDebugMessage(
-			4,
-			0.0f,
-			FColor::White,
-			FString::Printf(TEXT("Wood: %d"), Wood)
-		);
-
-		GEngine->AddOnScreenDebugMessage(
-			5,
-			0.0f,
-			FColor::White,
-			FString::Printf(TEXT("Stone: %d"), Stone)
-		);
-
-		GEngine->AddOnScreenDebugMessage(
-			6,
-			0.0f,
-			FColor::White,
-			FString::Printf(TEXT("Berry: %d"), Berry)
-		);
 	}
 
 	// Drain stamina continuously while sprinting.
@@ -221,6 +176,12 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ASurvivalCharacter::StartSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ASurvivalCharacter::StopSprint);
 
+	// Eat a berry to restore hunger.
+	PlayerInputComponent->BindAction("EatBerry", IE_Pressed, this, &ASurvivalCharacter::EatBerry);
+
+	// Exit the game when the player presses Escape.
+	PlayerInputComponent->BindAction("ExitGame", IE_Pressed, this, &ASurvivalCharacter::ExitGame);
+
 	// Rotate the active building piece.
 	PlayerInputComponent->BindAction("RotPart", IE_Pressed, this, &ASurvivalCharacter::RotateBuilding);
 
@@ -228,6 +189,9 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("CraftMenu", IE_Pressed, this, &ASurvivalCharacter::ToggleCraftMenu);
 }
 
+// Linear algebra is used here to convert the player's rotation into direction vectors.
+// The rotation matrix produces world space forward and right vectors so movement 
+// follows the direction the player is facing.
 void ASurvivalCharacter::MoveForward(float AxisValue)
 {
 	// Get the direction the controller is facing and move forward or backward.
@@ -280,6 +244,10 @@ void ASurvivalCharacter::FindObject()
 		return;
 	}
 
+	// Line traces use Unreal's collision system to test a path between two points.
+	// This trace starts at the camera and checks the Visibility channel to determine
+	// which world object the player is aiming at and interacting with.
+	
 	// Store information about anything hit by the line trace.
 	FHitResult HitResult;
 
@@ -401,22 +369,47 @@ void ASurvivalCharacter::StopSprint()
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
+void ASurvivalCharacter::EatBerry()
+{
+	// only eat a berry if the player has at least one available.
+	if (Berry > 0 && Hunger < 100.0f)
+	{
+		// Remove one berry from the inventory.
+		ResourcesArray[2] -= 1;
+		Berry = ResourcesArray[2];
+
+		// Restore hunger without allowing it to exceed 100.
+		SetHunger(20.0f);
+	}
+}
+
+void ASurvivalCharacter::ExitGame()
+{
+	// Allow the player to exit the packaged game directly from gameplay.
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	{
+		PlayerController->ConsoleCommand(TEXT("quit"));
+	}
+}
+
 void ASurvivalCharacter::SetHealth(float Amount)
 {
-	// Adjust health while preventing it from exceeding the maximum value.
-	if (Health + Amount < 100.0f)
-	{
-		Health += Amount;
-	}
+	// Adjust health and keep it between 0 and 100.
+	Health = FMath::Clamp(
+		Health + Amount,
+		0.0f,
+		100.0f
+	);
 }
 
 void ASurvivalCharacter::SetHunger(float Amount)
 {
-	// Adjust hunger while preventing it from exceeding the maximum value.
-	if (Hunger + Amount < 100.0f)
-	{
-		Hunger += Amount;
-	}
+	// Adjust hunger and keep it between 0 and 100.
+	Hunger = FMath::Clamp(
+		Hunger + Amount,
+		0.0f,
+		100.0f
+	);
 }
 
 void ASurvivalCharacter::SetStamina(float Amount)
